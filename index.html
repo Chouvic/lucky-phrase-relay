@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#b91c1c">
+  <title>🐴 Lucky Phrase Relay – Year of the Horse | JPMC Glasgow</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700;900&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <!-- Particle canvas background -->
+  <canvas id="particles-canvas"></canvas>
+
+  <!-- Floating lanterns -->
+  <div class="floating-decorations" id="floating-decorations"></div>
+
+  <!-- ═══════════════ SCREEN: Welcome ═══════════════ -->
+  <div id="screen-welcome" class="screen active">
+    <div class="screen-content">
+      <div class="welcome-header">
+        <div class="horse-animation" id="horse-anim">🐴</div>
+        <h1 class="game-title">
+          <span class="title-chinese">新年快樂</span>
+          <span class="title-english">Lucky Phrase Relay</span>
+        </h1>
+        <p class="subtitle">Year of the Horse 🐎 2026</p>
+        <p class="subtitle-small">JPMC Glasgow Lunar New Year Celebration</p>
+      </div>
+
+      <div class="welcome-form">
+        <div class="input-group">
+          <label for="player-name">Your Name</label>
+          <input type="text" id="player-name" placeholder="Enter your name..." maxlength="16" autocomplete="off">
+        </div>
+        <button class="btn btn-primary btn-large" id="btn-join-default">
+          <span class="btn-icon">🏮</span> Join the Celebration
+        </button>
+      </div>
+
+      <div class="cultural-banner">
+        <p>🐴 <strong>Did you know?</strong> The Horse symbolises energy, passion, and an upbeat nature in Chinese zodiac! People born in the Year of the Horse are known for their independence and quick wit. 🏇</p>
+      </div>
+
+      <div class="error-message" id="welcome-error"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ SCREEN: Game ═══════════════ -->
+  <div id="screen-game" class="screen">
+    <div class="screen-content game-layout">
+      <!-- Top: Greeting Builder -->
+      <div class="greeting-area">
+        <div class="round-indicator">
+          <span id="round-num">1</span> / <span id="round-max">12</span>
+        </div>
+        <div class="greeting-scroll" id="greeting-display">
+          <span class="greeting-starter" id="greeting-starter-text"></span>
+          <span class="greeting-words" id="greeting-words"></span>
+          <span class="greeting-cursor">▎</span>
+        </div>
+      </div>
+
+      <!-- Middle: Current Player -->
+      <div class="turn-info">
+        <div class="current-player-banner is-you" id="current-player-banner">
+          <span class="player-avatar" id="turn-avatar"></span>
+          <span class="player-name" id="turn-name"></span>
+          <span class="turn-label">— pick a tile!</span>
+        </div>
+        <div class="timer-bar-container">
+          <div class="timer-bar" id="timer-bar"></div>
+        </div>
+      </div>
+
+      <!-- Tiles Area -->
+      <div class="tiles-area" id="tiles-area">
+        <div class="tiles-container" id="tiles-container"></div>
+        <p class="tiles-hint" id="tiles-hint">Pick a tile to add to the greeting!</p>
+      </div>
+
+      <!-- Luck Meter -->
+      <div class="luck-meter">
+        <span class="luck-label">🍀 Luck:</span>
+        <div class="luck-bar-container">
+          <div class="luck-bar" id="luck-bar"></div>
+        </div>
+        <span class="luck-value" id="luck-value">0</span>
+      </div>
+    </div>
+
+    <!-- Taboo Alert Overlay -->
+    <div class="taboo-overlay" id="taboo-overlay">
+      <div class="taboo-card">
+        <div class="taboo-icon">⚠️</div>
+        <h3>Taboo Tile!</h3>
+        <p class="taboo-tile-text" id="taboo-tile-text"></p>
+        <p class="taboo-note" id="taboo-note"></p>
+        <p class="taboo-player" id="taboo-player"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ SCREEN: Results ═══════════════ -->
+  <div id="screen-results" class="screen">
+    <div class="screen-content">
+      <div class="results-header">
+        <div class="fireworks-emoji">🎆🎇🎆</div>
+        <h2 id="results-grade"></h2>
+      </div>
+
+      <!-- Meme Card -->
+      <div class="meme-card" id="meme-card">
+        <div class="meme-card-inner">
+          <div class="meme-border">
+            <div class="meme-top-decoration">🏮🐴🏮</div>
+            <div class="meme-greeting" id="meme-greeting"></div>
+            <div class="meme-bottom">
+              <span class="meme-event">JPMC Glasgow</span>
+              <span class="meme-year">Year of the Horse 2026</span>
+            </div>
+            <div class="meme-score">
+              Luck Score: <span id="meme-score-value"></span> ✨
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Score Breakdown -->
+      <div class="score-breakdown" id="score-breakdown">
+        <h3>📊 Score Breakdown</h3>
+        <div class="score-row"><span>Base Luck</span><span id="sb-base"></span></div>
+        <div class="score-row"><span>Rare Tile Bonus</span><span id="sb-rare"></span></div>
+        <div class="score-row"><span>Rhythm Bonus</span><span id="sb-rhythm"></span></div>
+        <div class="score-row"><span>🐴 Horse Bonus</span><span id="sb-horse"></span></div>
+        <div class="score-row score-total"><span>Total Luck</span><span id="sb-total"></span></div>
+      </div>
+
+      <!-- Cultural Notes from Taboo -->
+      <div class="cultural-notes" id="cultural-notes" style="display:none">
+        <h3>📚 Cultural Notes</h3>
+        <div id="cultural-notes-list"></div>
+      </div>
+
+      <!-- Greeting Tiles Review -->
+      <div class="tiles-review">
+        <h3>🀄 Your Greeting Tiles</h3>
+        <div class="tiles-review-list" id="tiles-review-list"></div>
+      </div>
+
+      <!-- Actions -->
+      <div class="results-actions">
+        <button class="btn btn-primary btn-large" id="btn-save-screenshot">
+          <span class="btn-icon">📸</span> Save Meme Card
+        </button>
+        <button class="btn btn-secondary btn-large" id="btn-play-again">
+          <span class="btn-icon">🔄</span> Play Again
+        </button>
+      </div>
+
+      <!-- Horse facts -->
+      <div class="cultural-banner">
+        <p>🐴 <strong>Year of the Horse Fun Fact:</strong> Those born under the Horse sign are said to be animated, active and energetic. Horses love to be in crowds, and can usually be seen at concerts, parties, and any public gathering! 🏇</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="js/particles.js"></script>
+  <script src="js/sounds.js"></script>
+  <script src="js/game-data.js"></script>
+  <script src="js/game-engine.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
