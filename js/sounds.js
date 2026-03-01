@@ -94,6 +94,8 @@ class SoundEngine {
       case 'gong': this._playGong(); break;
       case 'firecracker': this._playFirecracker(); break;
       case 'celebration': this._playCelebration(); break;
+      case 'envelopeOpen': this._playEnvelopeOpen(); break;
+      case 'whoosh': this._playWhoosh(); break;
     }
   }
 
@@ -433,6 +435,59 @@ class SoundEngine {
       o.start(t + 0.45 + i * 0.1);
       o.stop(t + 0.45 + i * 0.1 + 0.18);
     });
+  }
+
+  // ─── Envelope open: magical reveal sound ───
+  _playEnvelopeOpen() {
+    const t = this.ctx.currentTime;
+    // Rising sparkle
+    const notes = [523, 659, 784, 1047, 1319, 1568];
+    notes.forEach((freq, i) => {
+      const o = this.ctx.createOscillator();
+      const g = this.ctx.createGain();
+      o.connect(g);
+      g.connect(this.ctx.destination);
+      o.type = 'sine';
+      o.frequency.setValueAtTime(freq, t + i * 0.08);
+      g.gain.setValueAtTime(0.12, t + i * 0.08);
+      g.gain.exponentialRampToValueAtTime(0.01, t + i * 0.08 + 0.25);
+      o.start(t + i * 0.08);
+      o.stop(t + i * 0.08 + 0.3);
+    });
+
+    // Shimmer wash
+    const shimmer = this.ctx.createOscillator();
+    const sg = this.ctx.createGain();
+    shimmer.connect(sg);
+    sg.connect(this.ctx.destination);
+    shimmer.type = 'triangle';
+    shimmer.frequency.setValueAtTime(2000, t + 0.4);
+    shimmer.frequency.exponentialRampToValueAtTime(4000, t + 0.8);
+    sg.gain.setValueAtTime(0.04, t + 0.4);
+    sg.gain.exponentialRampToValueAtTime(0.001, t + 1.0);
+    shimmer.start(t + 0.4);
+    shimmer.stop(t + 1.0);
+  }
+
+  // ─── Whoosh: transition swoosh ───
+  _playWhoosh() {
+    const t = this.ctx.currentTime;
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = this._createNoiseBuffer(0.3);
+    const ng = this.ctx.createGain();
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(500, t);
+    filter.frequency.exponentialRampToValueAtTime(3000, t + 0.15);
+    filter.frequency.exponentialRampToValueAtTime(500, t + 0.3);
+    filter.Q.setValueAtTime(1, t);
+    noise.connect(filter);
+    filter.connect(ng);
+    ng.connect(this.ctx.destination);
+    ng.gain.setValueAtTime(0.12, t);
+    ng.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+    noise.start(t);
+    noise.stop(t + 0.35);
   }
 }
 

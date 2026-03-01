@@ -24,7 +24,30 @@
     <span id="music-icon">🔇</span>
   </button>
 
-  <!-- ═══════════════ SCREEN: Welcome ═══════════════ -->
+  <!-- Journey Progress Bar -->
+  <div class="journey-progress" id="journey-progress">
+    <div class="journey-step completed" data-step="1">
+      <span class="journey-dot">1</span>
+      <span class="journey-label">Welcome</span>
+    </div>
+    <div class="journey-connector"></div>
+    <div class="journey-step" data-step="2">
+      <span class="journey-dot">2</span>
+      <span class="journey-label">Phrase Relay</span>
+    </div>
+    <div class="journey-connector"></div>
+    <div class="journey-step" data-step="3">
+      <span class="journey-dot">3</span>
+      <span class="journey-label">春聯 Couplet</span>
+    </div>
+    <div class="journey-connector"></div>
+    <div class="journey-step" data-step="4">
+      <span class="journey-dot">4</span>
+      <span class="journey-label">🧧 Grand Finale</span>
+    </div>
+  </div>
+
+  <!-- ═══════════════ SCREEN 1: Welcome ═══════════════ -->
   <div id="screen-welcome" class="screen active">
     <div class="screen-content">
       <div class="welcome-header">
@@ -42,22 +65,36 @@
           <label for="player-name">Your Name</label>
           <input type="text" id="player-name" placeholder="Enter your name..." maxlength="16" autocomplete="off">
         </div>
-        <button class="btn btn-primary btn-large" id="btn-join-default">
-          <span class="btn-icon">🏮</span> Play Lucky Phrase Relay
-        </button>
-        <div class="divider"><span>or</span></div>
-        <button class="btn btn-secondary btn-large" id="btn-chunlian">
-          <span class="btn-icon">🧧</span> Create Your 春聯 Spring Couplet
+        <button class="btn btn-primary btn-large" id="btn-start-journey">
+          <span class="btn-icon">🏮</span> Begin Your Lunar New Year Journey
         </button>
       </div>
 
-      <div class="how-to-play">
-        <h3>📜 How to Play</h3>
-        <ul>
-          <li>🎯 Pick the <strong>luckier phrase</strong> each round — avoid <strong>taboo</strong> ones!</li>
-          <li>⏱️ <strong>12 seconds</strong> per round, <strong>6 rounds</strong> total</li>
-          <li>🏆 Score high to craft the ultimate blessing scroll!</li>
-        </ul>
+      <div class="journey-overview">
+        <h3>🗺️ Your Journey Awaits</h3>
+        <div class="journey-overview-steps">
+          <div class="journey-ov-step">
+            <span class="journey-ov-num">1</span>
+            <div>
+              <strong>Lucky Phrase Relay</strong>
+              <p>Pick the luckier phrase each round — avoid taboo ones! 6 rounds, 12 seconds each.</p>
+            </div>
+          </div>
+          <div class="journey-ov-step">
+            <span class="journey-ov-num">2</span>
+            <div>
+              <strong>春聯 Spring Couplet</strong>
+              <p>Create your own traditional door decoration with header and vertical scrolls.</p>
+            </div>
+          </div>
+          <div class="journey-ov-step">
+            <span class="journey-ov-num">3</span>
+            <div>
+              <strong>🧧 Red Envelope Surprise</strong>
+              <p>Open a lucky red envelope with good wishes and Lunar New Year fun facts!</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="cultural-banner">
@@ -68,7 +105,7 @@
     </div>
   </div>
 
-  <!-- ═══════════════ SCREEN: Game ═══════════════ -->
+  <!-- ═══════════════ SCREEN 2: Game (Phrase Relay) ═══════════════ -->
   <div id="screen-game" class="screen">
     <div class="screen-content game-layout">
       <!-- Top: Scroll Builder -->
@@ -80,9 +117,7 @@
           </div>
         </div>
         <div class="scroll-intro" id="scroll-intro"></div>
-        <div class="scroll-lines" id="scroll-lines">
-          <!-- Filled in dynamically as phrases are picked -->
-        </div>
+        <div class="scroll-lines" id="scroll-lines"></div>
         <span class="greeting-cursor">▎</span>
       </div>
 
@@ -99,7 +134,7 @@
         </div>
       </div>
 
-      <!-- Phrase Choices (2 stacked vertically) -->
+      <!-- Phrase Choices -->
       <div class="phrases-area" id="phrases-area">
         <div class="phrases-container" id="phrases-container"></div>
         <p class="phrases-hint" id="phrases-hint">Choose a wisdom phrase for your scroll!</p>
@@ -128,16 +163,40 @@
     </div>
   </div>
 
-  <!-- ═══════════════ SCREEN: Chūnlián Builder ═══════════════ -->
+  <!-- ═══════════════ SCREEN 3: Transition (Game → Chunlian) ═══════════════ -->
+  <div id="screen-transition" class="screen">
+    <div class="screen-content">
+      <div class="transition-content">
+        <div class="transition-emoji">🎊✨🎊</div>
+        <h2 class="transition-title">Wonderful!</h2>
+        <p class="transition-subtitle" id="transition-subtitle">Your Blessing Scroll is complete!</p>
+        
+        <div class="transition-score-preview" id="transition-score-preview">
+          <div class="transition-grade" id="transition-grade"></div>
+          <div class="transition-luck">Luck Score: <span id="transition-luck-value">0</span> ✨</div>
+        </div>
+
+        <div class="transition-next">
+          <div class="transition-arrow">⬇️</div>
+          <h3>Next: Create Your 春聯 Spring Couplet!</h3>
+          <p>Decorate your doorway with a traditional Spring Couplet — the finishing touch to your Lunar New Year celebration.</p>
+        </div>
+
+        <button class="btn btn-primary btn-large transition-btn" id="btn-continue-chunlian">
+          <span class="btn-icon">🧧</span> Continue the Journey
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ SCREEN 4: Chūnlián Builder ═══════════════ -->
   <div id="screen-chunlian" class="screen">
     <div class="screen-content">
 
       <!-- Steps area (visible during picking) -->
       <div id="chunlian-steps-area">
         <div class="cl-top-bar">
-          <button class="btn btn-secondary btn-small" id="chunlian-back">
-            <span class="btn-icon">←</span> Back
-          </button>
+          <span class="cl-journey-badge">🧧 Part 2 of Your Journey</span>
           <span class="cl-step-num" id="chunlian-step-num">Step 1 of 3</span>
         </div>
 
@@ -153,108 +212,146 @@
         <div class="cl-options" id="chunlian-options"></div>
       </div>
 
-      <!-- Result area (visible after all 3 picked) -->
-      <div id="chunlian-result" style="display:none">
-        <div class="cl-result-header">
-          <div class="fireworks-emoji">🧧🎊🧧</div>
-          <h2>Your Spring Couplet is Ready!</h2>
-          <h3 class="cl-result-subtitle">春聯完成！</h3>
-        </div>
-
-        <!-- Personalised wish -->
-        <div id="chunlian-wish" class="cl-wish"></div>
-
-        <!-- Visual Chūnlián display -->
-        <div id="chunlian-visual" class="cl-visual-container"></div>
-
-        <!-- Cultural explanation -->
-        <div class="cultural-banner cl-culture-note">
-          <p>🧧 <strong>About Spring Couplets (春聯):</strong> Traditionally written on red paper with black or gold ink and hung on door frames during Chinese New Year. The right scroll (右聯 / 上聯) is read first, the left scroll (左聯 / 下聯) second, with the horizontal header (橫批) across the top — always read right to left!</p>
-        </div>
-
-        <!-- Actions -->
-        <div class="results-actions">
-          <button class="btn btn-primary btn-large" id="btn-save-chunlian">
-            <span class="btn-icon">📸</span> Save My 春聯
-          </button>
-          <button class="btn btn-secondary btn-large" id="btn-chunlian-restart">
-            <span class="btn-icon">🔄</span> Create Another
-          </button>
-          <button class="btn btn-secondary btn-large" id="btn-chunlian-home">
-            <span class="btn-icon">🏠</span> Back to Home
-          </button>
-        </div>
-      </div>
-
+      <!-- Result area (hidden — now goes to grand finale instead) -->
+      <div id="chunlian-result" style="display:none"></div>
     </div>
   </div>
 
-  <!-- ═══════════════ SCREEN: Results ═══════════════ -->
-  <div id="screen-results" class="screen">
-    <div class="screen-content">
-      <div class="results-header">
+  <!-- ═══════════════ SCREEN 5: Grand Finale ═══════════════ -->
+  <div id="screen-finale" class="screen">
+    <div class="screen-content finale-content">
+      
+      <div class="finale-header">
         <div class="fireworks-emoji">🎆🎇🎆</div>
-        <h2 id="results-grade"></h2>
+        <h2>🐴 Your Lunar New Year Masterpiece! 🐴</h2>
+        <p class="finale-subtitle" id="finale-player-name"></p>
       </div>
 
-      <!-- Meme Card -->
-      <div class="meme-card" id="meme-card">
-        <div class="meme-card-inner">
-          <div class="meme-border">
-            <div class="meme-top-decoration">🏮🐴🏮</div>
-            <h3 class="meme-scroll-title" id="meme-scroll-title"></h3>
-            <div class="meme-greeting" id="meme-greeting"></div>
-            <div class="meme-bottom">
-              <span class="meme-event">JPMC Glasgow</span>
-              <span class="meme-year">Year of the Horse 2026</span>
-            </div>
-            <div class="meme-designed-by" id="meme-designed-by"></div>
-            <div class="meme-score">
-              Luck Score: <span id="meme-score-value"></span> ✨
+      <!-- Tab Navigation -->
+      <div class="finale-tabs">
+        <button class="finale-tab active" data-tab="scroll">📜 Blessing Scroll</button>
+        <button class="finale-tab" data-tab="chunlian">🧧 春聯 Couplet</button>
+        <button class="finale-tab" data-tab="combined">� Combined</button>
+      </div>
+
+      <!-- Tab: Blessing Scroll -->
+      <div class="finale-tab-content active" id="finale-tab-scroll">
+        <div class="meme-card" id="meme-card">
+          <div class="meme-card-inner">
+            <div class="meme-border">
+              <div class="meme-top-decoration">🏮🐴🏮</div>
+              <h3 class="meme-scroll-title" id="meme-scroll-title"></h3>
+              <div class="meme-greeting" id="meme-greeting"></div>
+              <div class="meme-bottom">
+                <span class="meme-event">JPMC Glasgow</span>
+                <span class="meme-year">Year of the Horse 2026</span>
+              </div>
+              <div class="meme-designed-by" id="meme-designed-by"></div>
+              <div class="meme-score">
+                Luck Score: <span id="meme-score-value"></span> ✨
+              </div>
             </div>
           </div>
         </div>
+
+        <!-- Score Breakdown -->
+        <div class="score-breakdown" id="score-breakdown">
+          <h3>📊 Score Breakdown</h3>
+          <div class="score-row"><span>Base Luck</span><span id="sb-base"></span></div>
+          <div class="score-row"><span>Rare Phrase Bonus</span><span id="sb-rare"></span></div>
+          <div class="score-row"><span>Rhythm Bonus (Streak)</span><span id="sb-rhythm"></span></div>
+          <div class="score-row"><span>🐴 Horse Phrase Bonus</span><span id="sb-horse"></span></div>
+          <div class="score-row"><span>🌈 Diversity Bonus</span><span id="sb-diversity"></span></div>
+          <div class="score-row score-total"><span>Total Luck</span><span id="sb-total"></span></div>
+        </div>
+
+        <!-- Cultural Notes from Taboo -->
+        <div class="cultural-notes" id="cultural-notes" style="display:none">
+          <h3>📚 Cultural Notes</h3>
+          <div id="cultural-notes-list"></div>
+        </div>
+
+        <!-- Phrase Review -->
+        <div class="phrases-review">
+          <h3>📜 Your Blessing Scroll</h3>
+          <div class="phrases-review-list" id="phrases-review-list"></div>
+        </div>
       </div>
 
-      <!-- Score Breakdown -->
-      <div class="score-breakdown" id="score-breakdown">
-        <h3>📊 Score Breakdown</h3>
-        <div class="score-row"><span>Base Luck</span><span id="sb-base"></span></div>
-        <div class="score-row"><span>Rare Phrase Bonus</span><span id="sb-rare"></span></div>
-        <div class="score-row"><span>Rhythm Bonus (Streak)</span><span id="sb-rhythm"></span></div>
-        <div class="score-row"><span>🐴 Horse Phrase Bonus</span><span id="sb-horse"></span></div>
-        <div class="score-row"><span>🌈 Diversity Bonus</span><span id="sb-diversity"></span></div>
-        <div class="score-row score-total"><span>Total Luck</span><span id="sb-total"></span></div>
+      <!-- Tab: Chunlian -->
+      <div class="finale-tab-content" id="finale-tab-chunlian">
+        <div id="finale-chunlian-wish" class="cl-wish"></div>
+        <div id="finale-chunlian-visual" class="cl-visual-container"></div>
+        <div class="cultural-banner cl-culture-note">
+          <p>🧧 <strong>About Spring Couplets (春聯):</strong> Traditionally written on red paper with black or gold ink and hung on door frames during Chinese New Year. The right scroll (右聯 / 上聯) is read first, the left scroll (左聯 / 下聯) second, with the horizontal header (橫批) across the top — always read right to left!</p>
+        </div>
       </div>
 
-      <!-- Cultural Notes from Taboo -->
-      <div class="cultural-notes" id="cultural-notes" style="display:none">
-        <h3>📚 Cultural Notes</h3>
-        <div id="cultural-notes-list"></div>
+      <!-- Tab: Combined -->
+      <div class="finale-tab-content" id="finale-tab-combined">
+        <div class="combined-display" id="combined-display">
+          <!-- Dynamically rendered combined view -->
+        </div>
       </div>
 
-      <!-- Phrase Review -->
-      <div class="phrases-review">
-        <h3>📜 Your Blessing Scroll</h3>
-        <div class="phrases-review-list" id="phrases-review-list"></div>
+      <!-- Red Envelope Button -->
+      <div class="envelope-section">
+        <h3>🧧 One More Surprise...</h3>
+        <p>A special red envelope with good wishes awaits you!</p>
+        <button class="btn btn-envelope" id="btn-open-envelope">
+          <span class="envelope-btn-icon">🧧</span>
+          <span>Open Your Red Envelope</span>
+        </button>
       </div>
 
       <!-- Actions -->
       <div class="results-actions">
         <button class="btn btn-primary btn-large" id="btn-save-screenshot">
-          <span class="btn-icon">📸</span> Save Meme Card
+          <span class="btn-icon">�</span> Save My Masterpiece
         </button>
         <button class="btn btn-secondary btn-large" id="btn-play-again">
-          <span class="btn-icon">🔄</span> Play Again
-        </button>
-        <button class="btn btn-secondary btn-large" id="btn-results-home">
-          <span class="btn-icon">🏠</span> Back to Home
+          <span class="btn-icon">🔄</span> Start New Journey
         </button>
       </div>
 
       <!-- Horse facts -->
       <div class="cultural-banner">
         <p>🐴 <strong>Year of the Horse Fun Fact:</strong> Those born under the Horse sign are said to be animated, active and energetic. Horses love to be in crowds, and can usually be seen at concerts, parties, and any public gathering! 🏇</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ RED ENVELOPE OVERLAY ═══════════════ -->
+  <div class="envelope-overlay" id="envelope-overlay">
+    <div class="envelope-container" id="envelope-container">
+      <!-- Closed state -->
+      <div class="envelope-closed" id="envelope-closed">
+        <div class="envelope-body">
+          <div class="envelope-flap"></div>
+          <div class="envelope-face">
+            <div class="envelope-seal">福</div>
+            <div class="envelope-text-decoration">
+              <span>恭</span><span>喜</span><span>發</span><span>財</span>
+            </div>
+          </div>
+        </div>
+        <p class="envelope-tap-hint">Tap to open! 🎉</p>
+      </div>
+      <!-- Opened state -->
+      <div class="envelope-opened" id="envelope-opened" style="display:none">
+        <div class="envelope-card-inner">
+          <div class="envelope-wish-header">🧧 ✨ 🧧</div>
+          <h3 class="envelope-wish-title" id="envelope-wish-title"></h3>
+          <p class="envelope-wish-text" id="envelope-wish-text"></p>
+          <div class="envelope-divider">🐴</div>
+          <div class="envelope-fun-fact">
+            <h4>🎋 Lunar New Year Fun Fact</h4>
+            <p id="envelope-fun-fact-text"></p>
+          </div>
+          <button class="btn btn-primary" id="btn-close-envelope">
+            <span class="btn-icon">✨</span> Wonderful!
+          </button>
+        </div>
       </div>
     </div>
   </div>
