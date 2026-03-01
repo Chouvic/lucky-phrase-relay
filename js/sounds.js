@@ -11,6 +11,9 @@ class SoundEngine {
     this.initialized = false;
     this.bgGain = null;  // background music gain node
     this.bgPlaying = false;
+    this.bgSource = null;
+    this.bgBuffer = null;
+    this.bgMuted = false;
   }
 
   init() {
@@ -18,10 +21,62 @@ class SoundEngine {
     try {
       this.ctx = new (window.AudioContext || window.webkitAudioContext)();
       this.initialized = true;
+      this._loadBgMusic();
     } catch (e) {
       console.warn('Web Audio not supported');
       this.enabled = false;
     }
+  }
+
+  async _loadBgMusic() {
+    try {
+      const response = await fetch('bg-music-60s.mp3');
+      const arrayBuffer = await response.arrayBuffer();
+      this.bgBuffer = await this.ctx.decodeAudioData(arrayBuffer);
+    } catch (e) {
+      console.warn('Could not load background music:', e);
+    }
+  }
+
+  startBgMusic() {
+    if (!this.enabled || !this.ctx || !this.bgBuffer || this.bgPlaying) return;
+    if (this.ctx.state === 'suspended') this.ctx.resume();
+
+    this.bgGain = this.ctx.createGain();
+    this.bgGain.gain.setValueAtTime(this.bgMuted ? 0 : 0.15, this.ctx.currentTime);
+    this.bgGain.connect(this.ctx.destination);
+
+    this.bgSource = this.ctx.createBufferSource();
+    this.bgSource.buffer = this.bgBuffer;
+    this.bgSource.loop = true;
+    this.bgSource.connect(this.bgGain);
+    this.bgSource.start(0);
+    this.bgPlaying = true;
+  }
+
+  stopBgMusic() {
+    if (this.bgSource) {
+      try { this.bgSource.stop(); } catch (e) { /* already stopped */ }
+      this.bgSource = null;
+    }
+    this.bgPlaying = false;
+  }
+
+  toggleBgMusic() {
+    if (!this.bgPlaying) {
+      this.startBgMusic();
+      this.bgMuted = false;
+      return true; // now playing
+    }
+    this.bgMuted = !this.bgMuted;
+    if (this.bgGain) {
+      this.bgGain.gain.setTargetAtTime(
+        this.bgMuted ? 0 : 0.15,
+        this.ctx.currentTime,
+        0.1
+      );
+    }
+    return !this.bgMuted; // return true if audible
   }
 
   play(type) {

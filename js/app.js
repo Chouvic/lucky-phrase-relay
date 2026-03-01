@@ -32,6 +32,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('click', () => soundEngine.init(), { once: true });
   document.addEventListener('touchstart', () => soundEngine.init(), { once: true });
 
+  // Music toggle button
+  setupMusicToggle();
+
   // Setup event listeners
   setupWelcomeEvents();
   setupGameEvents();
@@ -51,10 +54,21 @@ function showScreen(name) {
   window.scrollTo(0, 0);
 }
 
+// ─── Music Toggle ───────────────────────────────────────────
+function setupMusicToggle() {
+  const btn = $('#music-toggle');
+  const icon = $('#music-icon');
+
+  btn.addEventListener('click', () => {
+    soundEngine.init();
+    const isPlaying = soundEngine.toggleBgMusic();
+    icon.textContent = isPlaying ? '🔊' : '🔇';
+  });
+}
+
 // ═══════════════ WELCOME SCREEN ═══════════════
 function setupWelcomeEvents() {
   $('#btn-join-default').addEventListener('click', () => {
-    soundEngine.play('click');
     const name = $('#player-name').value.trim();
     if (!name) {
       showError('Please enter your name!');
