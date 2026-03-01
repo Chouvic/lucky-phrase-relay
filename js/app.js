@@ -28,9 +28,22 @@ const screens = {
 
 // ─── Init ───────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  // Init sound on first interaction
-  document.addEventListener('click', () => soundEngine.init(), { once: true });
-  document.addEventListener('touchstart', () => soundEngine.init(), { once: true });
+  // Init sound on first interaction and auto-play background music
+  const initAndPlay = () => {
+    soundEngine.init();
+    // Wait for bg music buffer to load, then auto-play
+    const tryPlay = () => {
+      if (soundEngine.bgBuffer) {
+        soundEngine.startBgMusic();
+        $('#music-icon').textContent = '🔊';
+      } else {
+        setTimeout(tryPlay, 200);
+      }
+    };
+    tryPlay();
+  };
+  document.addEventListener('click', initAndPlay, { once: true });
+  document.addEventListener('touchstart', initAndPlay, { once: true });
 
   // Music toggle button
   setupMusicToggle();
@@ -101,7 +114,6 @@ function startGame(name) {
   $('#scroll-intro').textContent = state.scrollIntro;
 
   showScreen('game');
-  soundEngine.play('gong');
   renderScrollLines([], state.sections);
   updateLuckMeter(0);
 
@@ -316,6 +328,10 @@ function setupResultsEvents() {
   $('#btn-play-again').addEventListener('click', () => {
     soundEngine.play('click');
     startGame(state.playerName);
+  });
+
+  $('#btn-results-home').addEventListener('click', () => {
+    showScreen('welcome');
   });
 }
 
