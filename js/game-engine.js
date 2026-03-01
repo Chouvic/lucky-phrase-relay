@@ -1,18 +1,20 @@
 /* ═══════════════════════════════════════════════════════════
-   GAME ENGINE – All game logic, previously on the server
-   Now runs entirely in the browser – no server needed!
+   GAME ENGINE – Wisdom Phrase Relay
+   Year of the Horse 2026 | JPMC Glasgow
+   Players build a blessing scroll by choosing between
+   two wisdom phrases per round. Each round presents one
+   phrase per line — a curated choice of Chinese wisdom.
    ═══════════════════════════════════════════════════════════ */
 
 class GameEngine {
   constructor() {
-    this.state = null; // current game state
+    this.state = null;
     this.timerHandle = null;
-    this.onTurnStart = null;   // callback(turnData)
-    this.onTilePicked = null;  // callback(pickData)
-    this.onGameOver = null;    // callback(resultData)
+    this.onTurnStart = null;
+    this.onTilePicked = null;
+    this.onGameOver = null;
   }
 
-  // Simple UUID replacement – crypto.randomUUID or fallback
   _uuid() {
     if (crypto.randomUUID) return crypto.randomUUID();
     return 'xxxx-xxxx-xxxx'.replace(/x/g, () =>
@@ -20,188 +22,169 @@ class GameEngine {
     );
   }
 
-  // Pick a random greeting template
   _pickTemplate() {
-    return GREETING_TEMPLATES[Math.floor(Math.random() * GREETING_TEMPLATES.length)];
+    return SCROLL_TEMPLATES[Math.floor(Math.random() * SCROLL_TEMPLATES.length)];
   }
 
-  // Get a random avatar
   _getRandomAvatar() {
     return AVATARS[Math.floor(Math.random() * AVATARS.length)];
   }
 
-  // Generate random tiles for a given slot
-  _getRandomTiles(count, requiredSlot, forceTaboo) {
-    const tiles = [];
-    const slotTiles = LUCKY_TILES.filter(t => t.slot === requiredSlot);
-    const tabooForSlot = TABOO_TILES.filter(t => t.slot === requiredSlot);
+  // Get 2 phrase choices for a given pool category
+  // One might be taboo (~25% chance)
+  _getChoicesForPool(poolName, forceTaboo) {
+    const luckyPool = [...(PHRASE_POOLS[poolName] || ALL_LUCKY_PHRASES)];
+    const choices = [];
 
-    // Include a taboo tile ~25% of the time or if forced
-    const includeTaboo = (forceTaboo || Math.random() < 0.25) && tabooForSlot.length > 0;
+    // Possibly include a taboo phrase
+    const includeTaboo = (forceTaboo || Math.random() < 0.25) && TABOO_PHRASES.length > 0;
     if (includeTaboo) {
-      const taboo = tabooForSlot[Math.floor(Math.random() * tabooForSlot.length)];
-      tiles.push({ ...taboo, id: this._uuid() });
+      const taboo = TABOO_PHRASES[Math.floor(Math.random() * TABOO_PHRASES.length)];
+      choices.push({ ...taboo, id: this._uuid() });
     }
 
-    // Fill remaining with lucky tiles from the matching slot
-    const pool = [...slotTiles];
-    while (tiles.length < count && pool.length > 0) {
-      const idx = Math.floor(Math.random() * pool.length);
-      const tile = pool.splice(idx, 1)[0];
-      tiles.push({ ...tile, id: this._uuid() });
-    }
+    // Pick from the lucky pool, avoiding already-picked phrases
+    const usedChinese = new Set(this.state.greeting.map(g => g.chinese));
+    const available = luckyPool.filter(p => !usedChinese.has(p.chinese));
+    const pool = available.length >= 2 ? available : luckyPool;
 
-    // Shuffle
-    for (let i = tiles.length - 1; i > 0; i--) {
+    // Shuffle and pick
+    for (let i = pool.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
-      [tiles[i], tiles[j]] = [tiles[j], tiles[i]];
+      [pool[i], pool[j]] = [pool[j], pool[i]];
     }
-    return tiles;
+
+    while (choices.length < 2 && pool.length > 0) {
+      const phrase = pool.pop();
+      // Don't add duplicate of taboo's chinese text
+      if (!choices.some(c => c.chinese === phrase.chinese)) {
+        choices.push({ ...phrase, id: this._uuid() });
+      }
+    }
+
+    // Shuffle final order
+    if (choices.length === 2 && Math.random() > 0.5) {
+      [choices[0], choices[1]] = [choices[1], choices[0]];
+    }
+
+    return choices;
   }
 
-  // Calculate final score
   _calculateScore() {
     const gs = this.state;
     let luck = 0;
     let rareBonuses = 0;
     let tabooCount = 0;
-    const words = gs.greeting;
+    const phrases = gs.greeting;
 
-    words.forEach(w => {
-      luck += w.luck;
-      if (w.rare) rareBonuses++;
-      if (w.taboo) tabooCount++;
+    phrases.forEach(p => {
+      luck += p.luck;
+      if (p.rare) rareBonuses++;
+      if (p.taboo) tabooCount++;
     });
 
-    // Rhythm bonus
+    // Streak bonus: consecutive positive-luck phrases
     let streak = 0, maxStreak = 0;
-    words.forEach(w => {
-      if (w.luck > 0) { streak++; maxStreak = Math.max(maxStreak, streak); }
+    phrases.forEach(p => {
+      if (p.luck > 0) { streak++; maxStreak = Math.max(maxStreak, streak); }
       else streak = 0;
     });
-    const rhythmBonus = maxStreak >= 4 ? 5 : maxStreak >= 3 ? 3 : maxStreak >= 2 ? 1 : 0;
+    const rhythmBonus = maxStreak >= 5 ? 8 : maxStreak >= 4 ? 5 : maxStreak >= 3 ? 3 : 0;
 
-    // Horse bonus
-    const horseBonus = words.filter(w =>
-      ['🐴', '🐎', '🏇'].includes(w.text) || w.chinese === '馬' || w.chinese === '駿馬' || w.chinese === '賽馬'
-    ).length * 2;
+    // Horse bonus: extra points for horse-category phrases
+    const horseBonus = phrases.filter(p => p.category === 'horse' && !p.taboo).length * 2;
 
-    const total = luck + rareBonuses * 2 + rhythmBonus + horseBonus;
+    // Diversity bonus: unique categories
+    const categories = new Set(phrases.filter(p => !p.taboo).map(p => p.category));
+    const diversityBonus = categories.size >= 5 ? 5 : categories.size >= 4 ? 3 : categories.size >= 3 ? 1 : 0;
+
+    const total = luck + rareBonuses * 2 + rhythmBonus + horseBonus + diversityBonus;
     return {
       baseLuck: luck,
       rareBonuses,
       rhythmBonus,
       horseBonus,
+      diversityBonus,
       tabooCount,
       total: Math.max(0, total),
-      maxPossible: gs.maxRounds * 5,
-      grade: total >= 35 ? '🏆 Supreme Fortune!' :
-             total >= 25 ? '🎊 Magnificent Luck!' :
-             total >= 15 ? '🎆 Auspicious Blessings!' :
-             total >= 5  ? '🏮 Modest Fortune' :
-                           '💨 The Horse Galloped Away...',
+      maxPossible: gs.maxRounds * 6,
+      grade: total >= 40 ? '🏆 Supreme Fortune! 鴻運當頭' :
+             total >= 30 ? '🎊 Magnificent Luck! 大吉大利' :
+             total >= 20 ? '🎆 Auspicious Blessings! 吉星高照' :
+             total >= 10 ? '🏮 Modest Fortune 小有福氣' :
+                           '💨 The Horse Galloped Away... 馬失前蹄',
     };
   }
 
-  // Build the greeting text string
   buildGreetingText() {
     const gs = this.state;
-    const pattern = gs.greetingPattern;
-    const pickedTiles = gs.greeting;
-    let parts = [gs.greetingStarter];
-    let tileIndex = 0;
-
-    for (let i = 0; i < pattern.length; i++) {
-      const step = pattern[i];
-      if (step.connector) {
-        parts.push(step.connector);
-      } else if (tileIndex < pickedTiles.length) {
-        parts.push(pickedTiles[tileIndex].text);
-        tileIndex++;
-      }
-    }
-
-    if (tileIndex >= pattern.filter(s => s.slot).length) {
-      parts.push(gs.greetingCloser);
-    }
-
-    return parts.join(' ');
+    const parts = [gs.scrollIntro + '\n'];
+    gs.greeting.forEach((phrase, i) => {
+      const section = gs.sections[i];
+      const label = section ? section.label : '';
+      parts.push(`${phrase.chinese}  ${phrase.english}`);
+    });
+    return parts.join('\n');
   }
 
   // ─── Public API ───────────────────────────────────────────
 
-  // Start a new game for the given player name
   startNewGame(playerName) {
     this.clearTimer();
 
     const template = this._pickTemplate();
-    const starter = template.starter.replace('{name}', playerName);
+    const intro = template.intro.replace('{name}', playerName);
     const avatar = this._getRandomAvatar();
 
     this.state = {
       playerName,
       avatar,
-      status: 'picking', // picking | finished
+      status: 'picking',
       greeting: [],
-      greetingTemplate: template,
-      greetingStarter: starter,
-      greetingCloser: template.closer,
-      greetingPattern: template.pattern,
-      currentPatternIndex: 0,
+      scrollTemplate: template,
+      scrollTitle: template.title,
+      scrollIntro: intro,
+      sections: template.sections,
       round: 0,
-      maxRounds: template.pattern.filter(s => s.slot).length,
-      timerDuration: 10000,
+      maxRounds: template.sections.length,
+      timerDuration: 12000,
       totalLuck: 0,
       tabooHits: [],
-      currentTiles: null,
+      currentChoices: null,
     };
 
     return {
-      greetingStarter: this.state.greetingStarter,
-      greetingCloser: this.state.greetingCloser,
-      greetingPattern: this.state.greetingPattern,
+      scrollTitle: this.state.scrollTitle,
+      scrollIntro: this.state.scrollIntro,
+      sections: this.state.sections,
       maxRounds: this.state.maxRounds,
       avatar: this.state.avatar,
     };
   }
 
-  // Start the next turn – calls onTurnStart callback
   startNextTurn() {
     const gs = this.state;
     if (!gs || gs.status !== 'picking') return;
 
-    // Advance past connector steps
-    while (gs.currentPatternIndex < gs.greetingPattern.length && gs.greetingPattern[gs.currentPatternIndex].connector) {
-      gs.currentPatternIndex++;
-    }
-
-    // If we've exhausted the pattern, end the game
-    if (gs.currentPatternIndex >= gs.greetingPattern.length) {
+    if (gs.round >= gs.maxRounds) {
       setTimeout(() => this._endGame(), 500);
       return;
     }
 
-    const currentStep = gs.greetingPattern[gs.currentPatternIndex];
-    const forceTaboo = (gs.round % 2 === 1);
-    const tiles = this._getRandomTiles(3, currentStep.slot, forceTaboo);
-    gs.currentTiles = tiles;
-
-    const slotHints = {
-      adj: '✨ Pick an adjective!',
-      noun: '🎁 Pick a blessing!',
-      emoji: '🎉 Pick an emoji!',
-    };
+    const section = gs.sections[gs.round];
+    const forceTaboo = (gs.round % 3 === 2); // taboo every 3rd round
+    const choices = this._getChoicesForPool(section.pool, forceTaboo);
+    gs.currentChoices = choices;
 
     if (this.onTurnStart) {
       this.onTurnStart({
-        tiles,
+        choices,
         round: gs.round + 1,
         maxRounds: gs.maxRounds,
-        greetingText: this.buildGreetingText(),
+        sectionLabel: section.label,
+        sectionPool: section.pool,
         greeting: gs.greeting,
         timerDuration: gs.timerDuration,
-        slotHint: slotHints[currentStep.slot] || 'Pick a tile!',
-        slotType: currentStep.slot,
         playerName: gs.playerName,
         avatar: gs.avatar,
       });
@@ -211,48 +194,44 @@ class GameEngine {
     this.clearTimer();
     this.timerHandle = setTimeout(() => {
       if (gs.status !== 'picking') return;
-      const randomTile = tiles[Math.floor(Math.random() * tiles.length)];
-      this._pickTileInternal(randomTile, true);
+      // Auto-pick the first non-taboo choice, or random
+      const safe = choices.find(c => !c.taboo) || choices[0];
+      this._pickPhraseInternal(safe, true);
     }, gs.timerDuration + 500);
   }
 
-  // Player picks a tile by ID
-  pickTile(tileId) {
+  pickPhrase(phraseId) {
     const gs = this.state;
     if (!gs || gs.status !== 'picking') return;
-
     this.clearTimer();
 
-    const tile = gs.currentTiles?.find(t => t.id === tileId);
-    if (!tile) return;
-
-    this._pickTileInternal(tile, false);
+    const phrase = gs.currentChoices?.find(c => c.id === phraseId);
+    if (!phrase) return;
+    this._pickPhraseInternal(phrase, false);
   }
 
-  _pickTileInternal(tile, autoSelected) {
+  _pickPhraseInternal(phrase, autoSelected) {
     const gs = this.state;
 
-    gs.greeting.push(tile);
-    gs.totalLuck += tile.luck;
-    gs.currentPatternIndex++;
+    gs.greeting.push(phrase);
+    gs.totalLuck += phrase.luck;
 
     const result = {
-      tile,
+      phrase,
       playerName: gs.playerName,
       greeting: gs.greeting,
-      greetingText: this.buildGreetingText(),
       round: gs.round + 1,
       totalRounds: gs.maxRounds,
       autoSelected,
       tabooAlert: null,
     };
 
-    if (tile.taboo) {
-      gs.tabooHits.push({ tile, player: gs.playerName });
+    if (phrase.taboo) {
+      gs.tabooHits.push({ phrase, player: gs.playerName });
       result.tabooAlert = {
-        culturalNote: tile.culturalNote,
+        culturalNote: phrase.culturalNote,
         playerName: gs.playerName,
-        tile: tile,
+        phrase,
       };
     }
 
@@ -264,7 +243,7 @@ class GameEngine {
     if (gs.round >= gs.maxRounds) {
       setTimeout(() => this._endGame(), 1500);
     } else {
-      const delay = tile.taboo ? 3000 : 1500;
+      const delay = phrase.taboo ? 6000 : 1800;
       setTimeout(() => this.startNextTurn(), delay);
     }
   }
@@ -276,12 +255,13 @@ class GameEngine {
     this.clearTimer();
 
     const score = this._calculateScore();
-    const greetingText = this.buildGreetingText();
 
     if (this.onGameOver) {
       this.onGameOver({
-        greetingText,
         greeting: gs.greeting,
+        sections: gs.sections,
+        scrollTitle: gs.scrollTitle,
+        scrollIntro: gs.scrollIntro,
         score,
         tabooHits: gs.tabooHits,
         playerName: gs.playerName,
@@ -297,5 +277,4 @@ class GameEngine {
   }
 }
 
-// Export as global
 const gameEngine = new GameEngine();

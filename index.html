@@ -38,8 +38,21 @@
           <input type="text" id="player-name" placeholder="Enter your name..." maxlength="16" autocomplete="off">
         </div>
         <button class="btn btn-primary btn-large" id="btn-join-default">
-          <span class="btn-icon">🏮</span> Join the Celebration
+          <span class="btn-icon">🏮</span> Play Lucky Phrase Relay
         </button>
+        <div class="divider"><span>or</span></div>
+        <button class="btn btn-secondary btn-large" id="btn-chunlian">
+          <span class="btn-icon">🧧</span> Create Your 春聯 Spring Couplet
+        </button>
+      </div>
+
+      <div class="how-to-play">
+        <h3>📜 How to Play</h3>
+        <ul>
+          <li>🎯 Pick the <strong>luckier phrase</strong> each round — avoid <strong>taboo</strong> ones!</li>
+          <li>⏱️ <strong>12 seconds</strong> per round, <strong>6 rounds</strong> total</li>
+          <li>🏆 Score high to craft the ultimate blessing scroll!</li>
+        </ul>
       </div>
 
       <div class="cultural-banner">
@@ -53,34 +66,38 @@
   <!-- ═══════════════ SCREEN: Game ═══════════════ -->
   <div id="screen-game" class="screen">
     <div class="screen-content game-layout">
-      <!-- Top: Greeting Builder -->
+      <!-- Top: Scroll Builder -->
       <div class="greeting-area">
-        <div class="round-indicator">
-          <span id="round-num">1</span> / <span id="round-max">12</span>
+        <div class="scroll-header">
+          <h3 class="scroll-title" id="scroll-title">📜 Blessing Scroll</h3>
+          <div class="round-indicator">
+            <span id="round-num">1</span> / <span id="round-max">6</span>
+          </div>
         </div>
-        <div class="greeting-scroll" id="greeting-display">
-          <span class="greeting-starter" id="greeting-starter-text"></span>
-          <span class="greeting-words" id="greeting-words"></span>
-          <span class="greeting-cursor">▎</span>
+        <div class="scroll-intro" id="scroll-intro"></div>
+        <div class="scroll-lines" id="scroll-lines">
+          <!-- Filled in dynamically as phrases are picked -->
         </div>
+        <span class="greeting-cursor">▎</span>
       </div>
 
-      <!-- Middle: Current Player -->
+      <!-- Middle: Current Player & Section -->
       <div class="turn-info">
         <div class="current-player-banner is-you" id="current-player-banner">
           <span class="player-avatar" id="turn-avatar"></span>
           <span class="player-name" id="turn-name"></span>
-          <span class="turn-label">— pick a tile!</span>
+          <span class="turn-label" id="turn-label">— choose a phrase!</span>
         </div>
+        <div class="section-label" id="section-label"></div>
         <div class="timer-bar-container">
           <div class="timer-bar" id="timer-bar"></div>
         </div>
       </div>
 
-      <!-- Tiles Area -->
-      <div class="tiles-area" id="tiles-area">
-        <div class="tiles-container" id="tiles-container"></div>
-        <p class="tiles-hint" id="tiles-hint">Pick a tile to add to the greeting!</p>
+      <!-- Phrase Choices (2 stacked vertically) -->
+      <div class="phrases-area" id="phrases-area">
+        <div class="phrases-container" id="phrases-container"></div>
+        <p class="phrases-hint" id="phrases-hint">Choose a wisdom phrase for your scroll!</p>
       </div>
 
       <!-- Luck Meter -->
@@ -97,11 +114,73 @@
     <div class="taboo-overlay" id="taboo-overlay">
       <div class="taboo-card">
         <div class="taboo-icon">⚠️</div>
-        <h3>Taboo Tile!</h3>
-        <p class="taboo-tile-text" id="taboo-tile-text"></p>
+        <h3>Taboo Phrase!</h3>
+        <p class="taboo-phrase-chinese" id="taboo-phrase-chinese"></p>
+        <p class="taboo-phrase-english" id="taboo-phrase-english"></p>
         <p class="taboo-note" id="taboo-note"></p>
         <p class="taboo-player" id="taboo-player"></p>
       </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ SCREEN: Chūnlián Builder ═══════════════ -->
+  <div id="screen-chunlian" class="screen">
+    <div class="screen-content">
+
+      <!-- Steps area (visible during picking) -->
+      <div id="chunlian-steps-area">
+        <div class="cl-top-bar">
+          <button class="btn btn-secondary btn-small" id="chunlian-back">
+            <span class="btn-icon">←</span> Back
+          </button>
+          <span class="cl-step-num" id="chunlian-step-num">Step 1 of 3</span>
+        </div>
+
+        <div class="cl-step-header">
+          <h2 id="chunlian-step-title">選橫批 · Choose the Header</h2>
+          <p id="chunlian-step-desc">The horizontal scroll sits atop your door:</p>
+        </div>
+
+        <!-- Mini preview of selections so far -->
+        <div id="chunlian-preview-area"></div>
+
+        <!-- Options list -->
+        <div class="cl-options" id="chunlian-options"></div>
+      </div>
+
+      <!-- Result area (visible after all 3 picked) -->
+      <div id="chunlian-result" style="display:none">
+        <div class="cl-result-header">
+          <div class="fireworks-emoji">🧧🎊🧧</div>
+          <h2>Your Spring Couplet is Ready!</h2>
+          <h3 class="cl-result-subtitle">春聯完成！</h3>
+        </div>
+
+        <!-- Personalised wish -->
+        <div id="chunlian-wish" class="cl-wish"></div>
+
+        <!-- Visual Chūnlián display -->
+        <div id="chunlian-visual" class="cl-visual-container"></div>
+
+        <!-- Cultural explanation -->
+        <div class="cultural-banner cl-culture-note">
+          <p>🧧 <strong>About Spring Couplets (春聯):</strong> Traditionally written on red paper with black or gold ink and hung on door frames during Chinese New Year. The right scroll (右聯 / 上聯) is read first, the left scroll (左聯 / 下聯) second, with the horizontal header (橫批) across the top — always read right to left!</p>
+        </div>
+
+        <!-- Actions -->
+        <div class="results-actions">
+          <button class="btn btn-primary btn-large" id="btn-save-chunlian">
+            <span class="btn-icon">📸</span> Save My 春聯
+          </button>
+          <button class="btn btn-secondary btn-large" id="btn-chunlian-restart">
+            <span class="btn-icon">🔄</span> Create Another
+          </button>
+          <button class="btn btn-secondary btn-large" id="btn-chunlian-home">
+            <span class="btn-icon">🏠</span> Back to Home
+          </button>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -118,11 +197,13 @@
         <div class="meme-card-inner">
           <div class="meme-border">
             <div class="meme-top-decoration">🏮🐴🏮</div>
+            <h3 class="meme-scroll-title" id="meme-scroll-title"></h3>
             <div class="meme-greeting" id="meme-greeting"></div>
             <div class="meme-bottom">
               <span class="meme-event">JPMC Glasgow</span>
               <span class="meme-year">Year of the Horse 2026</span>
             </div>
+            <div class="meme-designed-by" id="meme-designed-by"></div>
             <div class="meme-score">
               Luck Score: <span id="meme-score-value"></span> ✨
             </div>
@@ -134,9 +215,10 @@
       <div class="score-breakdown" id="score-breakdown">
         <h3>📊 Score Breakdown</h3>
         <div class="score-row"><span>Base Luck</span><span id="sb-base"></span></div>
-        <div class="score-row"><span>Rare Tile Bonus</span><span id="sb-rare"></span></div>
-        <div class="score-row"><span>Rhythm Bonus</span><span id="sb-rhythm"></span></div>
-        <div class="score-row"><span>🐴 Horse Bonus</span><span id="sb-horse"></span></div>
+        <div class="score-row"><span>Rare Phrase Bonus</span><span id="sb-rare"></span></div>
+        <div class="score-row"><span>Rhythm Bonus (Streak)</span><span id="sb-rhythm"></span></div>
+        <div class="score-row"><span>🐴 Horse Phrase Bonus</span><span id="sb-horse"></span></div>
+        <div class="score-row"><span>🌈 Diversity Bonus</span><span id="sb-diversity"></span></div>
         <div class="score-row score-total"><span>Total Luck</span><span id="sb-total"></span></div>
       </div>
 
@@ -146,10 +228,10 @@
         <div id="cultural-notes-list"></div>
       </div>
 
-      <!-- Greeting Tiles Review -->
-      <div class="tiles-review">
-        <h3>🀄 Your Greeting Tiles</h3>
-        <div class="tiles-review-list" id="tiles-review-list"></div>
+      <!-- Phrase Review -->
+      <div class="phrases-review">
+        <h3>📜 Your Blessing Scroll</h3>
+        <div class="phrases-review-list" id="phrases-review-list"></div>
       </div>
 
       <!-- Actions -->
@@ -173,7 +255,9 @@
   <script src="js/particles.js"></script>
   <script src="js/sounds.js"></script>
   <script src="js/game-data.js"></script>
+  <script src="js/chunlian-data.js"></script>
   <script src="js/game-engine.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/chunlian.js"></script>
 </body>
 </html>
